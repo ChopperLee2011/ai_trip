@@ -51,7 +51,7 @@ export default function Home() {
           setStatusMsg(null);
           setPolling(false);
         } else if (data.status === "FAILURE") {
-          setStatusMsg("1推荐生成失败，请稍后重试");
+          setStatusMsg("推荐生成失败，请稍后重试");
           setPolling(false);
         } else {
           // 继续等待
@@ -94,7 +94,7 @@ export default function Home() {
       pollForResult(result.task_id);
     } catch (error) {
       console.log("handleFormSubmit error", error);
-      setStatusMsg("2推荐生成失败，请稍后重试");
+      setStatusMsg("推荐生成失败，请稍后重试");
     }
   };
 

@@ -230,7 +230,7 @@ async def analyze_xiaohongshu_account(account: str):
         mock_analysis = {
             "travel_style": "文艺小清新",
             "preferred_destinations": ["日本", "韩国", "台湾"],
-            "budget_range": "中等",
+            # "budget_range": "中等",
             "interests": ["美食", "摄影", "文化体验"],
             "activity_preferences": ["博物馆", "咖啡厅", "当地市场"]
         }

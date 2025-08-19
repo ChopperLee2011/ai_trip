@@ -56,7 +56,7 @@ export default function TravelForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 travel-form">
       {/* 目的地 */}
       <div>
         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
@@ -69,7 +69,7 @@ export default function TravelForm({
           value={formData.destination}
           onChange={handleInputChange}
           placeholder="例如：日本东京、泰国曼谷、法国巴黎"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
           required
         />
       </div>
@@ -86,7 +86,7 @@ export default function TravelForm({
             name="startDate"
             value={formData.startDate}
             onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             required
           />
         </div>
@@ -100,7 +100,7 @@ export default function TravelForm({
             name="endDate"
             value={formData.endDate}
             onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             required
           />
         </div>
@@ -118,14 +118,14 @@ export default function TravelForm({
           value={formData.xiaohongshuAccount}
           onChange={handleInputChange}
           placeholder="输入您的小红书用户名，获取个性化推荐"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
         />
         <p className="text-xs text-gray-500 mt-1">
           我们将分析您的偏好，提供更精准的推荐
         </p>
       </div>
 
-      {/* 预算范围 */}
+      {/* 预算范围
       <div>
         <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
           <DollarSign className="w-4 h-4 mr-2" />
@@ -141,7 +141,7 @@ export default function TravelForm({
           <option value="medium">中等 (平衡性价比)</option>
           <option value="high">豪华型 (追求品质)</option>
         </select>
-      </div>
+      </div> */}
 
       {/* 旅行风格 */}
       <div>
@@ -153,7 +153,7 @@ export default function TravelForm({
           name="travelStyle"
           value={formData.travelStyle}
           onChange={handleInputChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
         >
           <option value="cultural">文化体验</option>
           <option value="adventure">冒险探索</option>

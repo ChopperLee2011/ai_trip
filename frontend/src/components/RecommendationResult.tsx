@@ -102,19 +102,17 @@ export default function RecommendationResult({
             {expandedDay === index && (
               <div className="px-4 pb-4 border-t border-gray-100">
                 <div className="space-y-3 mt-3">
-                  {day.activities?.map((activity: any, actIndex: number) => (
+                  {day.schedule?.map((s: any, actIndex: number) => (
                     <div key={actIndex} className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
-                        <p className="font-medium">
-                          {activity.name || `活动 ${actIndex + 1}`}
+                        <p className="font-medium text-gray-600">
+                          {s.time || `活动 ${actIndex + 1}`}
                         </p>
-                        <p className="text-gray-600">{activity.description}</p>
+                        <p className="text-gray-600">{s.activity}</p>
                       </div>
                     </div>
-                  )) || (
-                    <p className="text-gray-600">{day.description || day}</p>
-                  )}
+                  )) || <p className="text-gray-600">{day.activity || day}</p>}
                 </div>
               </div>
             )}

@@ -61,7 +61,8 @@ class TravelRecommendationCrew:
         """偏好分析师 - 分析用户偏好"""
         return Agent(
             role="用户偏好分析师",
-            goal="分析用户的旅行偏好和小红书账号信息，提供个性化建议",
+            # goal="分析用户的旅行偏好和小红书账号信息，提供个性化建议",
+            goal="分析用户的旅行偏好，提供个性化建议",
             backstory="""你是一位数据分析专家，擅长从用户的社交媒体活动中分析其旅行偏好、
             兴趣爱好和生活方式，为其提供个性化的旅行建议。""",
             llm=self.llm,
@@ -105,7 +106,7 @@ class TravelRecommendationCrew:
         travel_input = self.travel_input
         return Task(
             description=f"""分析用户偏好：
-            小红书账号：{travel_input.get('xiaohongshu_account', '未提供')}
+            # 小红书账号：{travel_input.get('xiaohongshu_account', '未提供')}
             用户偏好：{travel_input.get('preferences', {})}
             
             根据提供的信息，总结用户的旅行风格、兴趣和预算。""",
@@ -129,6 +130,11 @@ class TravelRecommendationCrew:
             3. 餐厅推荐
             4. 交通安排
             5. 住宿建议
+            输出格式要求: JSON格式 包含:
+            - date: 日期
+            - schedule: 每日行程数组，包含：
+                - time: 时间
+                - activity: 活动
             """,
             agent=self.itinerary_planner(),
             expected_output="详细的日程安排，包含每日行程、餐厅、交通和住宿建议",
