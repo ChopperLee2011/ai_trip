@@ -1,0 +1,6 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
+    "python.envFile": "${workspaceFolder}/backend/.venv",
+    "python.pythonPath": "${workspaceFolder}/backend/.venv/bin/python"
+}
