@@ -2,5 +2,12 @@
 .env
 backend/.venv
 backend/*.pyc
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
 frontend/.next
 frontend/node_modules

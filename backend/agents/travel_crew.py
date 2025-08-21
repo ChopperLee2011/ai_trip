@@ -29,6 +29,16 @@ class TravelRecommendationCrew:
             api_key=os.getenv("DEEPSEEK_API_KEY")
         )
         self.travel_input = None
+
+    def _task_callback(self, task_output):
+        """任务完成回调函数"""
+        task_name = getattr(task_output, 'description', 'Unknown Task')[:50]
+        current_time = time.localtime()
+        logging.info(f"✅ 任务完成: {task_name}")
+        logging.info(f"⏰ 完成时间: {current_time}")
+        logging.info(f"📝 输出长度: {len(str(task_output))} 字符")
+        logging.info("-" * 50)
+        return task_output
     
     @agent    
     def destination_expert(self) -> Agent:
@@ -83,6 +93,7 @@ class TravelRecommendationCrew:
             allow_delegation=True
         )
     # 任务1：目的地分析
+   
     @task
     def destination_task(self) -> Task:
         travel_input = self.travel_input
@@ -97,7 +108,8 @@ class TravelRecommendationCrew:
             旅行时间：{travel_input['start_date']} 到 {travel_input['end_date']}
             """,
             agent=self.destination_expert(),
-            expected_output="详细的目的地信息报告，包含景点、美食、文化、交通等信息"
+            expected_output="详细的目的地信息报告，包含景点、美食、文化、交通等信息",
+            callback=self._task_callback
         )
     
     # 任务2：偏好分析
@@ -111,7 +123,8 @@ class TravelRecommendationCrew:
             
             根据提供的信息，总结用户的旅行风格、兴趣和预算。""",
             agent=self.preference_analyzer(),
-            expected_output="用户偏好分析报告，包含旅行风格、兴趣和预算分析"
+            expected_output="用户偏好分析报告，包含旅行风格、兴趣和预算分析",
+            callback=self._task_callback
         )
     
     # 任务3：行程规划
@@ -138,7 +151,8 @@ class TravelRecommendationCrew:
             """,
             agent=self.itinerary_planner(),
             expected_output="详细的日程安排，包含每日行程、餐厅、交通和住宿建议",
-            context=[self.destination_task(), self.preference_task()]
+            context=[self.destination_task(), self.preference_task()],
+            callback=self._task_callback
         )
 
     # 任务4：最终整合
@@ -160,7 +174,8 @@ class TravelRecommendationCrew:
             """,
             agent=self.coordinator(),
             expected_output="完整的JSON格式旅行推荐报告",
-            context=[self.destination_task(), self.preference_task(), self.itinerary_task()]
+            context=[self.destination_task(), self.preference_task(), self.itinerary_task()],
+            callback=self._task_callback
         )
 
     @crew
