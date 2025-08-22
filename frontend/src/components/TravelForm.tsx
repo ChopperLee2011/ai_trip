@@ -170,14 +170,17 @@ export default function TravelForm({
         disabled={loading}
         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center"
       >
-        {loading ? (
+        {
+          "获取AI推荐"
+          /* {loading ? (
           <>
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
             AI团队正在分析，请等待5到10分钟...
           </>
         ) : (
           "获取AI推荐"
-        )}
+        )} */
+        }
       </button>
     </form>
   );

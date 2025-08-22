@@ -52,6 +52,10 @@ echo "🤖 启动CrewAI后端服务 (端口 8000)..."
 python main.py &
 BACKEND_PID=$!
 
+echo "⚙️  启动Huey队列处理器..."
+python start_worker.py > /dev/tty 2>&1 &
+HUEY_PID=$!
+
 cd ..
 
 # 启动前端服务
@@ -77,5 +81,5 @@ echo ""
 echo "按 Ctrl+C 停止所有服务"
 
 # 等待用户中断
-trap "echo '🛑 正在停止服务...'; kill $BACKEND_PID $FRONTEND_PID; exit" INT
+trap "echo '🛑 正在停止服务...'; kill $BACKEND_PID $FRONTEND_PID; $HUEY_PID; exit" INT
 wait

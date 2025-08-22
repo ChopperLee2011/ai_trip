@@ -8,3 +8,4 @@ requests>=2.31.0
 python-multipart>=0.0.6
 langchain-openai>=0.3.28
 redis>=6.0.0
+huey>=2.5.0

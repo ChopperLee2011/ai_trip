@@ -24,11 +24,33 @@ interface RecommendationData {
   success: boolean;
 }
 
+interface QueuePosition {
+  total: number;
+  position: number;
+}
+
 export default function Home() {
   const [recommendations, setRecommendations] =
     useState<RecommendationData | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [polling, setPolling] = useState(false);
+  const [queuePosition, setQueuePosition] = useState<QueuePosition | null>(
+    null
+  );
+
+  const fetchQueuePosition = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/queue/position/${taskId}`);
+      if (!response.ok) {
+        throw new Error("队列状态查询失败");
+      }
+      const data = await response.json();
+      setQueuePosition(data.position);
+      return data.position;
+    } catch (error) {
+      console.error("获取队列状态失败:", error);
+    }
+  };
 
   const pollForResult = async (taskId: string) => {
     setPolling(true);
@@ -36,30 +58,43 @@ export default function Home() {
     let timeoutId: NodeJS.Timeout | null = null;
     const poll = async () => {
       try {
-        const response = await fetch(`/api/result/${taskId}`);
-        console.log("poll response", response);
-        if (!response.ok) {
-          if (response.status === 404) {
-            // 任务还未创建，继续等待
-            return;
+        const position = await fetchQueuePosition(taskId);
+        if (position && position > 1) {
+          setStatusMsg(
+            `您的请求正在队列中，当前位置: 第 ${position} 位，大概需要等待 ${
+              position * 5
+            } 分钟，请勿关闭页面。`
+          );
+          timeoutId = setTimeout(poll, 10000); // 10s后再次请求
+        } else if (position == 1) {
+          setStatusMsg("预计等待5分钟，请勿关闭页面，您的请求正在处理中...");
+          setQueuePosition(null);
+          const response = await fetch(`/api/result/${taskId}`);
+          if (!response.ok) {
+            if (response.status === 404) {
+              // 任务还未创建，继续等待
+              return;
+            }
+            throw new Error("结果查询失败");
           }
-          throw new Error("结果查询失败");
-        }
-        const data = await response.json();
-        if (data.status === "SUCCESS") {
-          setRecommendations(data.result);
-          setStatusMsg(null);
-          setPolling(false);
-        } else if (data.status === "FAILURE") {
-          setStatusMsg("推荐生成失败，请稍后重试");
-          setPolling(false);
-        } else {
-          // 继续等待
-          timeoutId = setTimeout(poll, 30000); // 1分钟后再次请求
+          const data = await response.json();
+          console.log("data", data);
+          if (data.status === "SUCCESS") {
+            setRecommendations(data.result);
+            setStatusMsg(null);
+            setPolling(false);
+          } else if (data.status === "FAILURE") {
+            setStatusMsg("推荐生成失败，请稍后重试");
+            setPolling(false);
+          } else {
+            // 继续等待
+            timeoutId = setTimeout(poll, 3000); // 3s后再次请求
+          }
         }
       } catch (error) {
         setStatusMsg("查询结果时出错，请稍后重试");
         setPolling(false);
+        setQueuePosition(null);
       }
     };
     poll();
@@ -139,7 +174,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
             开始您的旅程
           </h2>
-          <TravelForm onSubmit={handleFormSubmit} />
+          <TravelForm onSubmit={handleFormSubmit} loading={polling} />
         </div>
 
         {/* Results Section */}

@@ -17,6 +17,9 @@ import logging
 # 加载环境变量
 load_dotenv()
 
+from task_queue.tasks import process_travel_recommendation, get_queue_status, get_position
+from task_queue.queue_config import redis_client
+
 from agents.travel_crew import TravelRecommendationCrew
 
 app = FastAPI(
@@ -60,6 +63,10 @@ class TaskResultResponse(BaseModel):
     task_id: str
     status: TaskStatus
     result: Optional[Dict[str, Any]] = None
+
+class QueueStatusResponse(BaseModel):
+    total: int
+    position: int
 
 # --- Crew AI Setup ---
 travel_crew = TravelRecommendationCrew()
@@ -132,7 +139,7 @@ async def health_check():
     return {"status": "healthy", "service": "travel-recommendation-api"}
 
 @app.post("/api/recommend", response_model=TaskCreationResponse, status_code=202)
-async def get_travel_recommendations(request: TravelRequest, background_tasks: BackgroundTasks):
+async def get_travel_recommendations(request: TravelRequest):
     # 1. 生成请求参数的唯一哈希
     travel_input = {
         "destination": request.destination,
@@ -143,7 +150,6 @@ async def get_travel_recommendations(request: TravelRequest, background_tasks: B
     }
     input_str = json.dumps(travel_input, sort_keys=True, ensure_ascii=False)
     input_hash = hashlib.md5(input_str.encode("utf-8")).hexdigest()
-    print(f"input_hash: {input_hash}")
 
     # 2. 查 Redis 缓存 - 使用线程池执行同步Redis操作
     loop = asyncio.get_running_loop()
@@ -160,7 +166,6 @@ async def get_travel_recommendations(request: TravelRequest, background_tasks: B
         )
         
         if task_data and task_data.get("status") == TaskStatus.SUCCESS:
-            # 直接返回已存在的 task_id
             return TaskCreationResponse(task_id=cached_task_id)
 
     # 3. 没有缓存，正常生成
@@ -170,12 +175,29 @@ async def get_travel_recommendations(request: TravelRequest, background_tasks: B
     # 写入 Redis 映射
     redis_client.set(f"travel:input:{input_hash}:task_id", task_id, ex=120*3600)  # 120小时过期
     redis_client.hset(f"travel:task:{task_id}", mapping={"status": TaskStatus.PENDING, "result": ""})
-
-    # 使用 asyncio.create_task 替代 background_tasks.add_task
-    # 这样可以确保任务在后台真正异步执行，不会阻塞主请求
-    asyncio.create_task(run_crew_in_background(task_id, travel_input))
+    
+    process_travel_recommendation(task_id, travel_input)
     logging.info(f"任务 {task_id} 已提交到后台执行")
     return TaskCreationResponse(task_id=task_id)
+
+
+@app.get("/api/queue/position/{task_id}", response_model=QueueStatusResponse)
+async def get_queue_position(task_id: str):
+    try:
+        queue_status = get_queue_status()
+        position = get_position(task_id)
+        # TODO: fix this work around
+        if position is None:
+            position = 1
+        status = {
+            "total": queue_status["total"],
+            "position": position 
+        }
+        print(f"queue_status: {queue_status}")
+        print(f"position: {position}")
+        return QueueStatusResponse(**status)
+    except Exception as e:
+        logging.error(f"获取队列状态错误: {str(e)}") 
 
 @app.get("/api/result/{task_id}", response_model=TaskResultResponse)
 async def get_task_result(task_id: str):

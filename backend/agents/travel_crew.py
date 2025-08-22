@@ -2,14 +2,14 @@ import os
 import time
 import logging
 from dotenv import load_dotenv
-# 加载 .env 文件中的环境变量
-load_dotenv()
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai.project import CrewBase, agent, crew, task
 from typing import Dict, Any, Optional
 import json
 import re
 
+# 加载 .env 文件中的环境变量
+load_dotenv()
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -190,9 +190,10 @@ class TravelRecommendationCrew:
             task_timeout=600  # 10分钟超时
         )
 
-    def _run_crew_with_logging(self):
+    def generate_recommendations(self, travel_input: Dict[str, Any]):
         """包装CrewAI执行，添加详细日志"""
         try:
+            self.travel_input = travel_input  
             logging.info("🤖 创建Crew实例...")
             crew_instance = self.crew()
 
@@ -200,108 +201,20 @@ class TravelRecommendationCrew:
             result = crew_instance.kickoff()
 
             logging.info("✅ CrewAI执行完成!")
-            return result
 
-        except Exception as e:
-            logging.error(f"❌ CrewAI执行失败: {str(e)}")
-            import traceback
-            logging.error(f"详细错误: {traceback.format_exc()}")
-            raise
-
-    async def generate_recommendations(self, travel_input: Dict[str, Any]) -> Dict[str, Any]:
-        """生成旅行推荐"""
-        logging.info(f"🚀 开始处理目的地: {travel_input['destination']}")
-        self.travel_input = travel_input
-
-        try:
-            # 记录开始执行时间
-            start_time = time.time()
-            logging.info("📋 开始执行Crew任务...")
-
-            # 在线程池中执行同步的crew.kickoff()，避免阻塞事件循环
-            import asyncio
-            loop = asyncio.get_running_loop()
-
-            logging.info("🔄 开始执行CrewAI任务...")
-            result = await loop.run_in_executor(
-                None,  # 使用默认线程池
-                self._run_crew_with_logging  # 包装方法，添加日志
-            )
-            
-            # 记录执行完成信息
-            execution_time = time.time() - start_time
-            logging.info(f"任务执行完成，耗时: {execution_time:.2f}秒")
-            logging.info(f"Task 执行结果类型: {type(result)}")
-            logging.debug(f"Raw result: {result}")
-        except Exception as e:
-            import traceback
-            logging.error(f"Crew kickoff 失败: {str(e)}")
-            logging.error(f"异常详情: {traceback.format_exc()}")
-            
-            # 返回错误信息
-            return {
-                "recommendations": {
-                    "error": f"执行失败: {str(e)}",
-                    "details": traceback.format_exc(),
-                    "itinerary": [],
-                    "restaurants": [],
-                    "attractions": [],
-                    "accommodations": []
-                },
-                "analysis": "执行过程中发生错误，请检查日志获取详细信息。"
-            }
-
-        # 获取最后一个任务的输出（coordination_task的结果）
-        task_output = str(result.tasks_output[-1])
-        
-        # 解析结果
-        try:
-            # 处理可能包含markdown格式的JSON字符串
-            if isinstance(task_output, str):
-                # 尝试从markdown代码块中提取JSON
-                json_match = re.search(r'```(?:json)?\s*\n([\s\S]*?)\n```', task_output)
-                if json_match:
-                    json_str = json_match.group(1).strip()
-                else:
-                    # 如果没有markdown代码块，尝试直接提取JSON对象
-                    json_match = re.search(r'(\{[\s\S]*\})', task_output)
-                    if json_match:
-                        json_str = json_match.group(1).strip()
-                    else:
-                        raise json.JSONDecodeError("No JSON object found in string", task_output, 0)
-                
-                # 尝试解析JSON
-                try:
-                    recommendations = json.loads(json_str)
-                except json.JSONDecodeError as e:
-                    logging.error(f"JSON解析错误: {str(e)}")
-                    logging.error(f"尝试解析的字符串: {json_str[:100]}...")
-                    raise
-            else:
-                # 如果不是字符串，假设它已经是一个字典/对象
-                recommendations = task_output
-                
-            # 确保recommendations包含所有必要的字段
-            if isinstance(recommendations, dict):
+            if isinstance(result, dict):
                 for key in ["itinerary", "restaurants", "attractions", "accommodations", "tips"]:
-                    if key not in recommendations:
-                        recommendations[key] = []
+                    if key not in result:
+                        result[key] = []
             
             return {
-                "recommendations": recommendations,
+                "recommendations": result,
                 "analysis": "基于您的偏好和目的地特色，我们的AI团队为您精心制定了这份个性化旅行推荐。",
                 "status": "success"
             }
         except json.JSONDecodeError as e:
-            # 如果JSON解析失败，记录错误并返回更详细的错误信息
             logging.error(f"JSON解析错误: {str(e)}")
-            logging.error(f"原始输出: {task_output[:200]}...")  # 只打印前200个字符避免日志过长
-            
-            # 尝试提取有用信息
             summary = "无法解析AI生成的推荐内容"
-            if len(task_output) > 100:
-                summary = task_output[:500] + "..." if len(task_output) > 500 else task_output
-            
             return {
                 "recommendations": {
                     "error": f"JSON解析失败: {str(e)}",
@@ -314,3 +227,8 @@ class TravelRecommendationCrew:
                 },
                 "analysis": "推荐已生成，但格式需要进一步处理。请联系技术支持。"
             }
+        except Exception as e:
+            logging.error(f"❌ CrewAI执行失败: {str(e)}")
+            import traceback
+            logging.error(f"详细错误: {traceback.format_exc()}")
+            raise
