@@ -6,8 +6,7 @@ from crewai import Agent, Task, Crew, Process, LLM
 from crewai.project import CrewBase, agent, crew, task
 from typing import Dict, Any, Optional
 import json
-import re
-
+from agents.types import TravelRecommendation
 # 加载 .env 文件中的环境变量
 load_dotenv()
 # 配置日志
@@ -174,8 +173,9 @@ class TravelRecommendationCrew:
             """,
             agent=self.coordinator(),
             expected_output="完整的JSON格式旅行推荐报告",
+            output_json=TravelRecommendation,
             context=[self.destination_task(), self.preference_task(), self.itinerary_task()],
-            callback=self._task_callback
+            callback=self._task_callback,
         )
 
     @crew
@@ -199,16 +199,15 @@ class TravelRecommendationCrew:
 
             logging.info("🎯 开始执行kickoff()...")
             result = crew_instance.kickoff()
-
             logging.info("✅ CrewAI执行完成!")
-
-            if isinstance(result, dict):
-                for key in ["itinerary", "restaurants", "attractions", "accommodations", "tips"]:
-                    if key not in result:
-                        result[key] = []
+            output = result.tasks_output[-1].to_dict()
+            # if isinstance(result, dict):
+            #     for key in ["itinerary", "restaurants", "attractions", "accommodations", "tips"]:
+            #         if key not in output:
+            #             output[key] = []
             
             return {
-                "recommendations": result,
+                "recommendations": output,
                 "analysis": "基于您的偏好和目的地特色，我们的AI团队为您精心制定了这份个性化旅行推荐。",
                 "status": "success"
             }

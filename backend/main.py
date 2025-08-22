@@ -193,8 +193,6 @@ async def get_queue_position(task_id: str):
             "total": queue_status["total"],
             "position": position 
         }
-        print(f"queue_status: {queue_status}")
-        print(f"position: {position}")
         return QueueStatusResponse(**status)
     except Exception as e:
         logging.error(f"获取队列状态错误: {str(e)}") 

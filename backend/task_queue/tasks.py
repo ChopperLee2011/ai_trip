@@ -9,17 +9,15 @@ from agents.travel_crew import TravelRecommendationCrew
 @huey.task()
 def process_travel_recommendation(task_id: str, travel_input: Dict[str, Any]):
     try:
-        redis_client.hset(f"travel:task{task_id}", mapping={"status":"PROCESSING", "started_at": time.time()})
+        # redis_client.hset(f"travel:task:{task_id}", mapping={"status":"PROCESSING", "started_at": time.time()})
 
         logging.info(f"Task starting:  {task_id}")
 
         travel_crew = TravelRecommendationCrew()
 
         result = travel_crew.generate_recommendations(travel_input)
-        print(f"result: ${result}")
 
-        # redis_client.hset(f"travel:task:{task_id}", mapping={"status": "SUCCESS", "result": json.dumps(result, ensure_ascii=False), "completed_at": time.time()})
-        redis_client.hset(f"travel:task:{task_id}", mapping={"status": "SUCCESS", "result": str(result), "completed_at": time.time()})
+        redis_client.hset(f"travel:task:{task_id}", mapping={"status": "SUCCESS", "result": json.dumps(result, ensure_ascii=False, indent=2), "completed_at": time.time()})
 
         logging.info(f"Task completed: {task_id}")
         return result
@@ -51,8 +49,6 @@ def get_position(task_id: str):
         position = None
         for idx, raw in enumerate(queue_items):
             message = pickle.loads(raw)
-            print(f"message.args: {message.args}")
-            print(f"task_id: {task_id}")
             if message.args[0] == task_id:
                 position = total - idx + 1
                 break

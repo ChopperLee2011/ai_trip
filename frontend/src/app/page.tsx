@@ -78,7 +78,6 @@ export default function Home() {
             throw new Error("结果查询失败");
           }
           const data = await response.json();
-          console.log("data", data);
           if (data.status === "SUCCESS") {
             setRecommendations(data.result);
             setStatusMsg(null);
@@ -88,7 +87,7 @@ export default function Home() {
             setPolling(false);
           } else {
             // 继续等待
-            timeoutId = setTimeout(poll, 3000); // 3s后再次请求
+            timeoutId = setTimeout(poll, 10000); // 10s后再次请求
           }
         }
       } catch (error) {
@@ -119,16 +118,13 @@ export default function Home() {
         },
         body: JSON.stringify(data),
       });
-      console.log("handleFormSubmit response", response);
-      console.log("handleFormSubmit response.status", response.status);
+
       if (response.status !== 202) {
         throw new Error("无法启动推荐任务");
       }
       const result = await response.json();
-      console.log("handleFormSubmit result", result);
       pollForResult(result.task_id);
     } catch (error) {
-      console.log("handleFormSubmit error", error);
       setStatusMsg("推荐生成失败，请稍后重试");
     }
   };
